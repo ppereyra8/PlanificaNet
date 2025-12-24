@@ -17,17 +17,28 @@ const Dashboard = ({ user, onLogout }) => {
   const [proximoTurno, setProximoTurno] = useState(null)
   const [notificaciones, setNotificaciones] = useState([])
   const [mostrarDropdown, setMostrarDropdown] = useState(false)
+  const [turnosDia, setTurnosDia] = useState([]);
 
   useEffect(() => {
     if (user.rol === 1 || user.rol === 2) {
       const fetchProximoTurno = async () => {
         try {
-          const response = await turnosAPI.getProximoTurno(user.id_usuario || user.id)
+          const response = await turnosAPI.getProximoTurno(user.id)
           setProximoTurno(response.data)
         } catch (error) {
           console.error("Error obteniendo próximo turno:", error)
         }
       }
+
+      const cargarTurnosDia = async () => { 
+        try { 
+          const resp = await turnosAPI.getTurnosDia(user.id); 
+          setTurnosDia(resp.data); 
+        } catch (err) { 
+          console.error("Error cargando turnos del día:", err);
+         } 
+        };
+
 
       const fetchNotificaciones = async () => {
         try {
@@ -39,6 +50,7 @@ const Dashboard = ({ user, onLogout }) => {
       }
 
       fetchProximoTurno()
+      cargarTurnosDia()
       fetchNotificaciones()
     }
   }, [user])
@@ -87,37 +99,132 @@ const Dashboard = ({ user, onLogout }) => {
         )
 
       case 2: // TÉCNICO
-        return (
-          <div className="row">
-            <div className="col-12">
-              <div className="card-container text-center">
-                <h5 className="fw-bold">Panel del Técnico</h5>
-                <p className="text-muted">Gestiona tus turnos asignados</p>
-                <Link to="/turnos" className="btn-main">
-                  Ver Mis Asignaciones
-                </Link>
+            return (
+              <div className="row">
+                {/* Panel principal */}
+                <div className="col-12">
+                  <div className="card-container text-center">
+                    <h5 className="fw-bold">Panel del Técnico</h5>
+                    <p className="text-muted">Gestiona tus turnos asignados</p>
+                    <Link to="/turnos" className="btn-main">
+                      Ver Mis Asignaciones
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Turnos del día */}
+                <div className="col-12 mt-3">
+                  <div className="card-container">
+                    <h6 className="fw-bold">📋 Turnos del Día</h6>
+                    {turnosDia.length === 0 ? (
+                      <p className="text-muted">No tenés turnos para hoy</p>
+                    ) : (
+                      <table className="table table-sm table-hover">
+                        <thead>
+                          <tr>
+                            <th>Fecha</th>
+                            <th>Franja</th>
+                            <th>Cliente</th>
+                            <th>Zona</th>
+                            <th>Barrio</th>
+                            <th>Dirección</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {turnosDia.map((t) => (
+                            <tr key={t.id_turno}>
+                              <td>{new Date(t.fecha).toLocaleDateString("es-AR")}</td>
+                              <td>{t.franja_horaria}</td>
+                              <td>{t.cliente_nombre}</td>
+                              <td>{t.zona_nombre}</td>
+                              <td>{t.barrio_nombre}</td>
+                              <td>{t.direccion}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )
+            );
+
 
       case 3: // ADMIN
-        return (
-          <div className="row">
-            <div className="col-12">
-              <div className="card-container text-center">
-                <h5 className="fw-bold">Panel de Administración</h5>
-                <p className="text-muted">Gestiona todos los turnos del sistema</p>
-                <Link to="/turnos" className="btn-main">
-                  Ver Todos los Turnos
-                </Link>
-              </div>
-            </div>
+  return (
+    <div>
+
+      {/* Panel principal */}
+      <div className="row">
+        <div className="col-12 mb-4">
+
+          <div className="card-container text-center">
+            <h5 className="fw-bold">Panel de Administración</h5>
+            <p className="text-muted">Gestiona todos los turnos del sistema</p>
+            <Link to="/turnos" className="btn-main">
+              Ver Todos los Turnos
+            </Link>
           </div>
-        )
+        </div>
+      </div>
+
+     
+      <div className="row">
+
+        {/* ABM Servicios */}
+        <div className="col-md-6 mb-4">
+          <div className="card-container text-center">
+            <h5 className="fw-bold">🛠️ ABM Servicios</h5>
+            <p className="text-muted">Gestiona los servicios disponibles en el sistema</p>
+            <Link to="/abm-servicios" className="btn-main">
+              ABM Servicios
+            </Link>
+          </div>
+        </div>
+
+        {/* Gestión de Clientes */}
+        <div className="col-md-6 mb-4">
+          <div className="card-container text-center">
+            <h5 className="fw-bold">👥 Gestión de Clientes</h5>
+            <p className="text-muted">Administra la información de los clientes</p>
+            <Link to="/gestion-clientes" className="btn-secondary-custom">
+              Gestión de Clientes
+            </Link>
+          </div>
+        </div>
+
+        {/* ABM Usuarios del Sistema */}
+        <div className="col-md-6 mb-4">
+          <div className="card-container text-center">
+            <h5 className="fw-bold">🧑‍💼 ABM Usuarios del Sistema</h5>
+            <p className="text-muted">Controla los usuarios internos</p>
+            <Link to="/abm-usuarios" className="btn-main">
+              ABM Usuarios
+            </Link>
+          </div>
+        </div>
+
+        {/* Reportes */}
+        <div className="col-md-6 mb-4">
+          <div className="card-container text-center">
+            <h5 className="fw-bold">📊 Reportes</h5>
+            <p className="text-muted">Visualiza estadísticas y reportes del sistema</p>
+            <Link to="/reportes" className="btn-secondary-custom">
+              Ver Reportes
+            </Link>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  )
+
 
       default:
         return null
+
+        
     }
   }
 

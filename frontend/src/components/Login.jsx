@@ -102,13 +102,6 @@ const Login = ({ onLogin }) => {
           </button>
         </div>
 
-        {/* Usuarios de prueba */}
-        <div className="mt-4 p-3 bg-white rounded small shadow-sm">
-          <strong>Usuarios de prueba:</strong><br />
-          Admin: admin@planificanet.com / password<br />
-          Técnico: tecnico@planificanet.com / password<br />
-          Cliente: cliente@test.com / password
-        </div>
 
       </div>
     </div>

@@ -69,6 +69,46 @@ const handleAccion = async (id_turno, nuevoEstado) => {
   }
 };
 
+const handleEditar = async (turno) => {
+  // Traemos lista de técnicos desde tu API
+  const respTecnicos = await turnosAPI.getVisitasPorTecnico(); 
+  const tecnicos = respTecnicos.data;
+
+  const { value: formValues } = await Swal.fire({
+    title: "Editar turno",
+    html: `
+      <input id="fecha" type="date" class="swal2-input" value="${turno.fecha.split("T")[0]}">
+      <select id="franja" class="swal2-input">
+        <option value="mañana" ${turno.franja_horaria === "mañana" ? "selected" : ""}>Mañana</option>
+        <option value="tarde" ${turno.franja_horaria === "tarde" ? "selected" : ""}>Tarde</option>
+        <option value="noche" ${turno.franja_horaria === "noche" ? "selected" : ""}>Noche</option>
+      </select>
+      <select id="tecnico" class="swal2-input">
+        ${tecnicos.map(t => 
+          `<option value="${t.id_tecnico}" ${turno.tecnico_id === t.id_tecnico ? "selected" : ""}>${t.tecnico_nombre}</option>`
+        ).join("")}
+      </select>
+    `,
+    focusConfirm: false,
+    preConfirm: () => {
+      return {
+        fecha: document.getElementById("fecha").value,
+        franja_horaria: document.getElementById("franja").value,
+        tecnico_id: document.getElementById("tecnico").value,
+      };
+    }
+  });
+
+  if (formValues) {
+    try {
+      await turnosAPI.updateTurno(turno.id_turno, formValues);
+      Swal.fire("Actualizado", "El turno fue modificado correctamente", "success");
+      loadTurnos();
+    } catch (err) {
+      Swal.fire("Error", "No se pudo actualizar el turno", "error");
+    }
+  }
+};
 
 
 
@@ -187,44 +227,58 @@ const handleAccion = async (id_turno, nuevoEstado) => {
                         </span>
                       </td>
 
-                      <td className="d-flex flex-column gap-2">
+                            <td className="d-flex flex-column gap-2">
 
-                        {/* ✅ Cliente puede cancelar */}
-                        {user.rol === 1 && turno.estado.toLowerCase() !== "cancelado" && (
-                          <button
-                            className="btn btn-sm d-flex align-items-center gap-1 text-danger"
-                            style={{ background: "transparent", border: "none" }}
-                            onClick={() => handleAccion(turno.id_turno, "Cancelado")}
-                          >
-                            ❌ <span>Cancelar</span>
-                          </button>
-                        )}
+                                {/* Cliente puede cancelar */}
+                                {user.rol === 1 && turno.estado.toLowerCase() !== "cancelado" && (
+                                  <button
+                                    className="btn btn-sm d-flex align-items-center gap-1 text-danger"
+                                    style={{ background: "transparent", border: "none" }}
+                                    onClick={() => handleAccion(turno.id_turno, "Cancelado")}
+                                  >
+                                    ❌ <span>Cancelar</span>
+                                  </button>
+                                )}
 
-                        {/* ✅ Técnico/Admin pueden confirmar */}
-                        {(user.rol === 2 || user.rol === 3) &&
-                          turno.estado.toLowerCase() === "pendiente" && (
-                            <button
-                              className="btn btn-sm d-flex align-items-center gap-1 text-success"
-                              style={{ background: "transparent", border: "none" }}
-                              onClick={() => handleAccion(turno.id_turno, "Confirmado")}
-                            >
-                              ✅ <span>Confirmar</span>
-                            </button>
-                          )}
+                                {/* Técnico/Admin pueden confirmar */}
+                                {(user.rol === 2 || user.rol === 3) &&
+                                  turno.estado.toLowerCase() === "pendiente" && (
+                                    <button
+                                      className="btn btn-sm d-flex align-items-center gap-1 text-success"
+                                      style={{ background: "transparent", border: "none" }}
+                                      onClick={() => handleAccion(turno.id_turno, "Confirmado")}
+                                    >
+                                      ✅ <span>Confirmar</span>
+                                    </button>
+                                  )}
 
-                        {/* ✅ Técnico/Admin pueden cancelar */}
-                        {(user.rol === 2 || user.rol === 3) &&
-                          turno.estado.toLowerCase() !== "cancelado" && (
-                            <button
-                              className="btn btn-sm d-flex align-items-center gap-1 text-danger"
-                              style={{ background: "transparent", border: "none" }}
-                              onClick={() => handleAccion(turno.id_turno, "Cancelado")}
-                            >
-                              ❌ <span>Cancelar</span>
-                            </button>
-                          )}
+                                {/* Técnico/Admin pueden cancelar */}
+                                {(user.rol === 2 || user.rol === 3) &&
+                                  turno.estado.toLowerCase() !== "cancelado" && (
+                                    <button
+                                      className="btn btn-sm d-flex align-items-center gap-1 text-danger"
+                                      style={{ background: "transparent", border: "none" }}
+                                      onClick={() => handleAccion(turno.id_turno, "Cancelado")}
+                                    >
+                                      ❌ <span>Cancelar</span>
+                                    </button>
+                                  )}
 
-                      </td>
+                                {/* Solo Admin puede editar turno si está pendiente o confirmado */}
+                                {user.rol === 3 &&
+                                  (turno.estado.toLowerCase() === "pendiente" ||
+                                  turno.estado.toLowerCase() === "confirmado") && (
+                                    <button
+                                      className="btn btn-sm d-flex align-items-center gap-1 text-primary"
+                                      style={{ background: "transparent", border: "none" }}
+                                      onClick={() => handleEditar(turno)}
+                                    >
+                                      ✏️ <span>Editar</span>
+                                    </button>
+                                  )}
+
+                              </td>
+
 
 
                     </tr>

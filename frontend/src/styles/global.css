@@ -141,3 +141,62 @@ h1, h2, h3, h4, h5 {
   margin: 0 auto;
 }
 
+/* Asegura que SweetAlert2 siempre quede encima de todo */
+.swal2-container {
+  z-index: 30000 !important;
+}
+
+/* Evita que algún reset global lo oculte por error */
+.swal2-container.swal2-center,
+.swal2-popup {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+
+/* Tabla: espaciado moderado */
+.table th,
+.table td {
+  padding: 0.55rem 0.75rem; /* menos espacio que antes */
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+/* Filas alternadas y hover */
+.table tbody tr:nth-child(odd) {
+  background-color: rgba(0,0,0,0.01);
+}
+.table tbody tr:hover {
+  background-color: rgba(13,110,253,0.06);
+}
+
+/* Botones compactos */
+.btn-main {
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+.btn-main:hover { background: #0b5ed7; }
+
+.btn-danger-light {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+.btn-danger-light:hover { background: #bb2d3b; }
+
+.btn-outline-secondary {
+  background: transparent;
+  color: #6c757d;
+  border: 1px solid #6c757d;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+.btn-outline-secondary:hover { background: #f8f9fa; }

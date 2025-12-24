@@ -3,6 +3,7 @@ import { turnosAPI } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
+import { serviciosAPI } from "../services/api";
 
 const SolicitarTurno = ({ user }) => {
   const navigate = useNavigate()
@@ -21,7 +22,7 @@ const SolicitarTurno = ({ user }) => {
   useEffect(() => {
     const fetchServicios = async () => {
       try {
-        const response = await turnosAPI.getServicios()
+        const response = await serviciosAPI.getAll()
         setServicios(response.data)
         setCargandoServicios(false)
       } catch (error) {
