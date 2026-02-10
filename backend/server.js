@@ -465,6 +465,16 @@ app.get('/api/turnos/proximo', authMiddleware, async (req, res) => {
 //obtener los turnos del técnico para la fecha actual:
 app.get('/api/turnos/tecnico-dia/:id', authMiddleware, async (req, res) => {
   try {
+    const tecnicoId = parseInt(req.params.id, 10);
+    if (Number.isNaN(tecnicoId)) {
+      return res.status(400).json({ error: 'ID de técnico inválido' });
+    }
+
+    // Solo admin o el propio técnico pueden consultar
+    if (req.user.rol !== 3 && !(req.user.rol === 2 && req.user.id === tecnicoId)) {
+      return res.status(403).json({ error: 'No tienes permiso para consultar estos turnos' });
+    }
+
     const hoy = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     const [rows] = await db.execute(
       `SELECT t.id_turno, t.fecha, t.franja_horaria, u.nombre AS cliente_nombre, 
@@ -475,7 +485,7 @@ app.get('/api/turnos/tecnico-dia/:id', authMiddleware, async (req, res) => {
        JOIN barrios b ON b.id_barrio = u.id_barrio
        WHERE t.tecnico_id = ? AND DATE(t.fecha) = ?
        ORDER BY t.fecha DESC`,
-      [req.params.id, hoy]
+      [tecnicoId, hoy]
     );
     res.json(rows);
   } catch (error) {
@@ -497,7 +507,7 @@ app.post('/api/turnos', authMiddleware, async (req, res) => {
 
     const clienteId = req.user.id;
 
-    const franjasValidas = ['Mañana', 'Tarde', 'Noche'];
+    const franjasValidas = ['mañana', 'tarde', 'noche'];
     if (!franjasValidas.includes(franja_horaria)) {
       return res.status(400).json({ error: 'Franja horaria inválida' });
     }
@@ -530,7 +540,7 @@ app.post('/api/turnos', authMiddleware, async (req, res) => {
 
       if (tecnicos.length === 0) {
         return res.status(400).json({
-          error: "No hay técnicos disponibles. Por favor prueba otra fecha u otra Franja horaria"
+          error: "No hay técnicos disponibles. Por favor prueba otra fecha u otra franja horaria"
         });
       }
 
@@ -539,7 +549,7 @@ app.post('/api/turnos', authMiddleware, async (req, res) => {
     // Crear turno
     const [result] = await db.execute(
       'INSERT INTO turnos (cliente_id, tecnico_id, fecha, franja_horaria, servicio_id, descripcion, estado) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [clienteId, tecnicoId, fecha, franja_horaria, servicio_id, descripcion, 'Pendiente']
+        [clienteId, tecnicoId, fecha, franja_horaria, servicio_id, descripcion, 'pendiente']
 
     );
 
@@ -648,7 +658,7 @@ app.put('/api/turnos/:id/status', authMiddleware, async (req, res) => {
     const userId = req.user.id;
     const userRol = req.user.rol;
 
-    const estadosValidos = ['Pendiente', 'Confirmado', 'Cancelado'];
+    const estadosValidos = ['pendiente', 'confirmado', 'cancelado'];
     if (!estadosValidos.includes(estado)) {
       return res.status(400).json({ error: 'Estado inválido' });
     }
@@ -692,7 +702,7 @@ app.put('/api/turnos/:id/status', authMiddleware, async (req, res) => {
     const fechaFormateada = formatearFecha(turno.fecha);
 
     // Notificaciones
-    if (estado === 'Confirmado') {
+    if (estado === 'confirmado') {
       await db.execute(
         'INSERT INTO notificaciones (id_usuario, mensaje, fecha_envio, leida) VALUES (?, ?, NOW(), 0)',
         [turno.cliente_id, `Tu turno del ${fechaFormateada} (${turno.franja_horaria}) fue confirmado.`]
@@ -701,7 +711,7 @@ app.put('/api/turnos/:id/status', authMiddleware, async (req, res) => {
         'INSERT INTO notificaciones (id_usuario, mensaje, fecha_envio, leida) VALUES (?, ?, NOW(), 0)',
         [turno.tecnico_id, `${usuarioAccion} confirmó el turno del ${fechaFormateada} (${turno.franja_horaria}).`]
       );
-    } else if (estado === 'Cancelado') {
+    } else if (estado === 'cancelado') {
       await db.execute(
         'INSERT INTO notificaciones (id_usuario, mensaje, fecha_envio, leida) VALUES (?, ?, NOW(), 0)',
         [turno.cliente_id, `Tu turno del ${fechaFormateada} (${turno.franja_horaria}) fue cancelado.`]
@@ -946,7 +956,11 @@ app.get("/api/servicios/:id", async (req, res) => {
 
 
 // Crear un nuevo servicio
-app.post("/api/servicios", async (req, res) => {
+app.post("/api/servicios", authMiddleware, async (req, res) => {
+  if (!req.user || req.user.rol !== 3) {
+    return res.status(403).json({ error: 'Solo admin puede crear servicios' });
+  }
+
   const { nombre, descripcion } = req.body;
 
   if (!nombre) {
@@ -974,8 +988,12 @@ app.post("/api/servicios", async (req, res) => {
 });
 
 // Actualizar un servicio
-app.put("/api/servicios/:id", async (req, res) => {
+app.put("/api/servicios/:id", authMiddleware, async (req, res) => {
   try {
+    if (!req.user || req.user.rol !== 3) {
+      return res.status(403).json({ error: 'Solo admin puede editar servicios' });
+    }
+
     const { id } = req.params;
     const { nombre, descripcion } = req.body;
 
@@ -1007,8 +1025,12 @@ app.put("/api/servicios/:id", async (req, res) => {
 });
 
 // Eliminar un servicio
-app.delete("/api/servicios/:id", async (req, res) => {
+app.delete("/api/servicios/:id", authMiddleware, async (req, res) => {
   try {
+    if (!req.user || req.user.rol !== 3) {
+      return res.status(403).json({ error: 'Solo admin puede eliminar servicios' });
+    }
+
     const { id } = req.params;
     const sql = "DELETE FROM servicios WHERE id_servicio = ?";
 
@@ -1035,6 +1057,10 @@ app.delete("/api/servicios/:id", async (req, res) => {
 // Obtener un cliente por ID
 app.get('/api/clientes/:id', authMiddleware, async (req, res) => {
   try {
+    if (req.user.rol !== 3) {
+      return res.status(403).json({ error: 'Solo admin puede ver detalle de clientes' });
+    }
+
     const { id } = req.params;
     const idNum = parseInt(id, 10);
 
@@ -1126,7 +1152,15 @@ app.put('/api/clientes/:id/estado', authMiddleware, async (req, res) => {
 // Historial de turnos de un técnico
 app.get('/api/tecnicos/:id/turnos', authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    if (req.user.rol !== 3 && !(req.user.rol === 2 && req.user.id === id)) {
+      return res.status(403).json({ error: 'No tienes permiso para ver este historial' });
+    }
+
     const [rows] = await db.execute(
       `SELECT tu.id_turno, tu.fecha, tu.franja_horaria, tu.estado, tu.descripcion,
               s.nombre AS servicio_nombre,
@@ -1228,5 +1262,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log('🚀 PlanificaNet MVP Backend en puerto', PORT);
     });
-
-

@@ -40,7 +40,7 @@ const handleAccion = async (id_turno, nuevoEstado) => {
   try {
     await updateStatus(id_turno, nuevoEstado);
 
-    if (nuevoEstado === "Confirmado") {
+    if (nuevoEstado === "confirmado") {
       Swal.fire({
         icon: "success",
         title: "Turno confirmado",
@@ -50,7 +50,7 @@ const handleAccion = async (id_turno, nuevoEstado) => {
       });
     }
 
-    if (nuevoEstado === "Cancelado") {
+    if (nuevoEstado === "cancelado") {
       Swal.fire({
         icon: "info",
         title: "Turno cancelado",
@@ -234,7 +234,7 @@ const handleEditar = async (turno) => {
                                   <button
                                     className="btn btn-sm d-flex align-items-center gap-1 text-danger"
                                     style={{ background: "transparent", border: "none" }}
-                                    onClick={() => handleAccion(turno.id_turno, "Cancelado")}
+                                    onClick={() => handleAccion(turno.id_turno, "cancelado")}
                                   >
                                     ❌ <span>Cancelar</span>
                                   </button>
@@ -246,7 +246,7 @@ const handleEditar = async (turno) => {
                                     <button
                                       className="btn btn-sm d-flex align-items-center gap-1 text-success"
                                       style={{ background: "transparent", border: "none" }}
-                                      onClick={() => handleAccion(turno.id_turno, "Confirmado")}
+                                      onClick={() => handleAccion(turno.id_turno, "confirmado")}
                                     >
                                       ✅ <span>Confirmar</span>
                                     </button>
@@ -258,7 +258,7 @@ const handleEditar = async (turno) => {
                                     <button
                                       className="btn btn-sm d-flex align-items-center gap-1 text-danger"
                                       style={{ background: "transparent", border: "none" }}
-                                      onClick={() => handleAccion(turno.id_turno, "Cancelado")}
+                                      onClick={() => handleAccion(turno.id_turno, "cancelado")}
                                     >
                                       ❌ <span>Cancelar</span>
                                     </button>
